@@ -168,12 +168,11 @@ public class ScreenshotEditorService extends Service implements View.OnClickList
                 if (mCutMode) {
                     cutEnd();
                 }
-                saveScreenshot();
                 shareScreenshot();
                 removeView();
                 break;
             case R.id.btn_cancel:
-//                deleteScreenshot();
+                deleteScreenshot();
                 removeView();
                 break;
             case R.id.btn_save:
@@ -273,6 +272,7 @@ public class ScreenshotEditorService extends Service implements View.OnClickList
         Log.d(TAG, "loadScreenshot: exists");
         Bitmap bitmap = FileUtil.getBitmap();
         mImgScreenshot.setImageBitmap(bitmap);
+        saveScreenshot();
     }
 
     /**
@@ -308,16 +308,11 @@ public class ScreenshotEditorService extends Service implements View.OnClickList
     }
 
     public void deleteScreenshot() {
-        String msg;
         boolean deleted = new File(mScreenshotPath).delete();
-        if (deleted)
-            msg = getString(R.string.action_delete_success);
-        else
-            msg = getString(R.string.action_delete_failed);
-        Toast.makeText(mContext, msg, Toast.LENGTH_SHORT).show();
-        sendBroadcast(new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE,
-                Uri.fromFile(new File(mScreenshotPath))));
-        removeView();
+        if (deleted) {
+            sendBroadcast(new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE,
+                    Uri.fromFile(new File(mScreenshotPath))));
+        }
     }
 
     @Override

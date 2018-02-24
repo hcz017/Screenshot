@@ -20,7 +20,7 @@ public class FileUtil {
     private static String mScreenshotDirAndName;
     private static Bitmap mBitmap;
 
-    private static String getAppPath(Context context) {
+    private static String getExternalStoragePath(Context context) {
         if (Environment.MEDIA_MOUNTED.equals(Environment.getExternalStorageState())) {
             return Environment.getExternalStorageDirectory().toString();
         } else {
@@ -29,7 +29,7 @@ public class FileUtil {
     }
 
     private static String getScreenShotDir(Context context) {
-        StringBuffer stringBuffer = new StringBuffer(getAppPath(context));
+        StringBuffer stringBuffer = new StringBuffer(getExternalStoragePath(context));
         stringBuffer.append(SCREEN_SHOT_PATH);
         File file = new File(stringBuffer.toString());
         if (!file.exists()) {

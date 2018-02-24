@@ -10,6 +10,7 @@ import android.graphics.Point;
 import android.net.Uri;
 import android.os.Handler;
 import android.os.IBinder;
+import android.support.v4.content.FileProvider;
 import android.util.Log;
 import android.view.Display;
 import android.view.KeyEvent;
@@ -19,7 +20,6 @@ import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
-import android.widget.Toast;
 
 import java.io.DataOutputStream;
 import java.io.File;
@@ -300,10 +300,13 @@ public class ScreenshotEditorService extends Service implements View.OnClickList
     public void shareScreenshot() {
         Log.d(TAG, "shareScreenshot pics");
         final File imageFile = new File(mScreenshotPath);
+        Uri imageUri = FileProvider.getUriForFile(mContext,
+                BuildConfig.APPLICATION_ID + ".provider",
+                imageFile);
         // Create a shareScreenshot intent
         Intent sharingIntent = new Intent(Intent.ACTION_SEND);
         sharingIntent.setType("image/png");
-        sharingIntent.putExtra(Intent.EXTRA_STREAM, Uri.fromFile(imageFile));
+        sharingIntent.putExtra(Intent.EXTRA_STREAM, imageUri);
         startActivity(Intent.createChooser(sharingIntent, getResources().getText(R.string.share)));
     }
 

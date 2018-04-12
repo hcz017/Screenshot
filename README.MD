@@ -1,5 +1,7 @@
+[中文README](README_CN.MD)
+
 # Screenshot
-A screenshot app run on Android N+(CKT Chengdu Internal Project).
+A screenshot app run on Android N+ (based on CKT Chengdu Internal Project [Screenshot](https://github.com/cktelecom/Screenshot)).
 
 ## Usage
 This app only works on android 7.0+.

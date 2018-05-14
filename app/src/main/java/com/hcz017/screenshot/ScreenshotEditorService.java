@@ -167,6 +167,7 @@ public class ScreenshotEditorService extends Service implements View.OnClickList
             case R.id.btn_share:
                 if (mCutMode) {
                     cutEnd();
+                    saveScreenshot();
                 }
                 shareScreenshot();
                 removeView();
@@ -178,8 +179,8 @@ public class ScreenshotEditorService extends Service implements View.OnClickList
             case R.id.btn_save:
                 if (mCutMode) {
                     cutEnd();
+                    saveScreenshot();
                 }
-                saveScreenshot();
                 removeView();
                 onDestroy();
                 break;
@@ -203,7 +204,10 @@ public class ScreenshotEditorService extends Service implements View.OnClickList
                 cutStart();
                 break;
             case R.id.button_sure:
-                cutEnd();
+                if (mCutMode){
+                    cutEnd();
+                    saveScreenshot();
+                }
                 break;
             default:
                 break;
@@ -211,6 +215,7 @@ public class ScreenshotEditorService extends Service implements View.OnClickList
     }
 
     private void cutEnd() {
+        Log.d(TAG, "cutEnd: ");
         mCutMode = false;
         mImgScreenshot.setImageBitmap(mCropImageView.getCropImage());
         mImgScreenshot.setVisibility(View.VISIBLE);
@@ -311,6 +316,7 @@ public class ScreenshotEditorService extends Service implements View.OnClickList
     }
 
     public void deleteScreenshot() {
+        Log.d(TAG, "deleteScreenshot: ");
         boolean deleted = new File(mScreenshotPath).delete();
         if (deleted) {
             sendBroadcast(new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE,

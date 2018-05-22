@@ -286,20 +286,26 @@ public class ScreenshotEditorService extends Service implements View.OnClickList
     public void saveScreenshot() {
         Log.d(TAG, "saveScreenshot to storage");
         mScreenshotPath = FileUtil.getScreenshotDirAndName();
-        try {
-            // Save
-            OutputStream out = new FileOutputStream(mScreenshotPath);
-            mImgScreenshot.getImageBitmap().compress(PNG, 100, out);
-            out.flush();
-            out.close();
-            sendBroadcast(new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE,
-                    Uri.fromFile(new File(mScreenshotPath))));
-            Log.d(TAG, "saveScreenshotFile: success");
-        } catch (Throwable e) {
-            // Several error may come out with file handling or OOM'
-            Log.e(TAG, "saveScreenshotFile: failed");
-            e.printStackTrace();
-        }
+
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    // Save
+                    OutputStream out = new FileOutputStream(mScreenshotPath);
+                    mImgScreenshot.getImageBitmap().compress(PNG, 100, out);
+                    out.flush();
+                    out.close();
+                    sendBroadcast(new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE,
+                            Uri.fromFile(new File(mScreenshotPath))));
+                    Log.d(TAG, "saveScreenshotFile: success");
+                } catch (Throwable e) {
+                    // Several error may come out with file handling or OOM'
+                    Log.e(TAG, "saveScreenshotFile: failed");
+                    e.printStackTrace();
+                }
+            }
+        }).start();
     }
 
     public void shareScreenshot() {

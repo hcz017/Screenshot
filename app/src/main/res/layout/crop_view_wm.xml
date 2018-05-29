@@ -52,13 +52,13 @@
         android:layout_height="0dp"
         android:layout_weight="1">
 
-        <com.hcz017.screenshot.DrawingView
+        <com.hcz017.screenshot.paint.DrawingView
             android:id="@+id/img_screenshot"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center"/>
 
-        <com.hcz017.screenshot.CropImageView
+        <com.hcz017.screenshot.crop.CropImageView
             android:id="@+id/crop_imageview"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
@@ -93,12 +93,12 @@
             android:visibility="gone"/>
 
         <Button
-            android:id="@+id/button_cut"
+            android:id="@+id/button_crop"
             style="@style/ButtonStyle"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="@string/crop_cut"/>
+            android:text="@string/crop"/>
     </LinearLayout>
 
     <LinearLayout
@@ -113,7 +113,7 @@
             style="@style/ButtonStyle"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="@string/crop_cut"/>
+            android:text="@string/crop"/>
     </LinearLayout>
 
     <LinearLayout

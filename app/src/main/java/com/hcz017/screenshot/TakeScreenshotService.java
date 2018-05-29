@@ -21,6 +21,8 @@ import android.util.Log;
 import android.view.Gravity;
 import android.view.WindowManager;
 
+import com.hcz017.screenshot.utils.FileUtil;
+
 import java.nio.ByteBuffer;
 
 public class TakeScreenshotService extends Service {

@@ -1,4 +1,4 @@
-package com.hcz017.screenshot;
+package com.hcz017.screenshot.paint;
 
 import android.content.Context;
 import android.graphics.Bitmap;

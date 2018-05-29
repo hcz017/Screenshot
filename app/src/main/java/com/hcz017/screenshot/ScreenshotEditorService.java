@@ -21,12 +21,13 @@ import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
 
+import com.hcz017.screenshot.crop.CropImageView;
+import com.hcz017.screenshot.paint.DrawingView;
+import com.hcz017.screenshot.utils.FileUtil;
+
 import java.io.DataOutputStream;
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.OutputStream;
-
-import static android.graphics.Bitmap.CompressFormat.PNG;
 
 public class ScreenshotEditorService extends Service implements View.OnClickListener {
 
@@ -35,7 +36,7 @@ public class ScreenshotEditorService extends Service implements View.OnClickList
     private View mainLayout;
     private WindowManager wm;
     private boolean isShowing = false;
-    private DrawingView mImgScreenshot;
+    private DrawingView mDrawingView;
     private Handler mainHandler;
     private static String mScreenshotPath;
     private static int COLOR_PANEL = 0;
@@ -46,8 +47,8 @@ public class ScreenshotEditorService extends Service implements View.OnClickList
     private CropImageView mCropImageView;
     private LinearLayout mLinearLayout;
     private LinearLayout mLinearLayoutsure;
-    private Button mButtonCut;
-    private boolean mCutMode;
+    private Button mButtonCrop;
+    private boolean mCropMode;
 
     @Override
     public void onCreate() {
@@ -95,6 +96,18 @@ public class ScreenshotEditorService extends Service implements View.OnClickList
         System.gc();
     }
 
+    @Override
+    public void onConfigurationChanged(Configuration newConfig) {
+        super.onConfigurationChanged(newConfig);
+
+        mainHandler.post(new Runnable() {
+            public void run() {
+                if (isShowing)
+                    wm.updateViewLayout(mainLayout, getParams());
+            }
+        });
+    }
+
     private void addView() {
         Log.d(TAG, "addView: ");
         if (!isShowing) {
@@ -129,14 +142,14 @@ public class ScreenshotEditorService extends Service implements View.OnClickList
                 mainLayout.setSystemUiVisibility(getUiOptions());
             }
         });
-        mImgScreenshot = (DrawingView) mainLayout.findViewById(R.id.img_screenshot);
+        mDrawingView = (DrawingView) mainLayout.findViewById(R.id.img_screenshot);
         mBrush = (ImageButton) mainLayout.findViewById(R.id.brush);
         mColorPanel = (ImageButton) mainLayout.findViewById(R.id.color_panel);
         mUndo = (ImageButton) mainLayout.findViewById(R.id.undo);
         mCropImageView = (CropImageView) mainLayout.findViewById(R.id.crop_imageview);
         mLinearLayout = (LinearLayout) mainLayout.findViewById(R.id.bot_bar);
         mLinearLayoutsure = (LinearLayout) mainLayout.findViewById(R.id.mlinearlayout_sure);
-        mButtonCut = (Button) mainLayout.findViewById(R.id.button_cut);
+        mButtonCrop = (Button) mainLayout.findViewById(R.id.button_crop);
         final ImageButton shareButton = (ImageButton) mainLayout.findViewById(R.id.btn_share);
         final ImageButton cancelButton = (ImageButton) mainLayout.findViewById(R.id.btn_cancel);
         final ImageButton saveButton = (ImageButton) mainLayout.findViewById(R.id.btn_save);
@@ -146,7 +159,7 @@ public class ScreenshotEditorService extends Service implements View.OnClickList
         mBrush.setOnClickListener(this);
         mColorPanel.setOnClickListener(this);
         mUndo.setOnClickListener(this);
-        mButtonCut.setOnClickListener(this);
+        mButtonCrop.setOnClickListener(this);
         shareButton.setOnClickListener(this);
         cancelButton.setOnClickListener(this);
         saveButton.setOnClickListener(this);
@@ -165,8 +178,8 @@ public class ScreenshotEditorService extends Service implements View.OnClickList
     public void onClick(View v) {
         switch (v.getId()) {
             case R.id.btn_share:
-                if (mCutMode) {
-                    cutEnd();
+                if (mCropMode) {
+                    cropEnd();
                     saveScreenshot();
                 }
                 shareScreenshot();
@@ -177,8 +190,8 @@ public class ScreenshotEditorService extends Service implements View.OnClickList
                 removeView();
                 break;
             case R.id.btn_save:
-                if (mCutMode) {
-                    cutEnd();
+                if (mCropMode) {
+                    cropEnd();
                     saveScreenshot();
                 }
                 removeView();
@@ -189,23 +202,23 @@ public class ScreenshotEditorService extends Service implements View.OnClickList
                 break;
             case R.id.brush:
                 mBrush.setImageResource(BRUSH == 0 ? R.drawable.ic_brush : R.drawable.ic_pen);
-                mImgScreenshot.setPenSize(BRUSH == 0 ? 40 : 10);
+                mDrawingView.setPenSize(BRUSH == 0 ? 40 : 10);
                 BRUSH = 1 - BRUSH;
                 break;
             case R.id.color_panel:
                 mColorPanel.setImageResource(COLOR_PANEL == 0 ? R.drawable.ic_color_blue : R.drawable.ic_color_red);
-                mImgScreenshot.setPenColor(COLOR_PANEL == 0 ? getColor(R.color.blue) : getColor(R.color.red));
+                mDrawingView.setPenColor(COLOR_PANEL == 0 ? getColor(R.color.blue) : getColor(R.color.red));
                 COLOR_PANEL = 1 - COLOR_PANEL;
                 break;
             case R.id.undo:
-                mImgScreenshot.undo();
+                mDrawingView.undo();
                 break;
-            case R.id.button_cut:
-                cutStart();
+            case R.id.button_crop:
+                cropStart();
                 break;
             case R.id.button_sure:
-                if (mCutMode){
-                    cutEnd();
+                if (mCropMode){
+                    cropEnd();
                     saveScreenshot();
                 }
                 break;
@@ -214,20 +227,20 @@ public class ScreenshotEditorService extends Service implements View.OnClickList
         }
     }
 
-    private void cutEnd() {
-        Log.d(TAG, "cutEnd: ");
-        mCutMode = false;
-        mImgScreenshot.setImageBitmap(mCropImageView.getCropImage());
-        mImgScreenshot.setVisibility(View.VISIBLE);
+    private void cropEnd() {
+        Log.d(TAG, "cropEnd: ");
+        mCropMode = false;
+        mDrawingView.setImageBitmap(mCropImageView.getCropImage());
+        mDrawingView.setVisibility(View.VISIBLE);
         mLinearLayout.setVisibility(View.VISIBLE);
         mLinearLayoutsure.setVisibility(View.GONE);
         mCropImageView.setVisibility(View.GONE);
     }
 
-    private void cutStart() {
-        mCutMode = true;
-        Bitmap mBitmap = mImgScreenshot.getImageBitmap();
-        mImgScreenshot.setVisibility(View.GONE);
+    private void cropStart() {
+        mCropMode = true;
+        Bitmap mBitmap = mDrawingView.getImageBitmap();
+        mDrawingView.setVisibility(View.GONE);
         mLinearLayout.setVisibility(View.GONE);
         mLinearLayoutsure.setVisibility(View.VISIBLE);
         mCropImageView.setDrawable(mBitmap, 200, 300);
@@ -237,9 +250,9 @@ public class ScreenshotEditorService extends Service implements View.OnClickList
     private void changeToPaintMode() {
         mainLayout.findViewById(R.id.bot_bar).setVisibility(View.GONE);
         mainLayout.findViewById(R.id.paint_bar).setVisibility(View.VISIBLE);
-        mImgScreenshot.initializePen();
-        mImgScreenshot.setPenSize(10);
-        mImgScreenshot.setPenColor(getColor(R.color.red));
+        mDrawingView.initializePen();
+        mDrawingView.setPenSize(10);
+        mDrawingView.setPenColor(getColor(R.color.red));
     }
 
     /**
@@ -273,10 +286,9 @@ public class ScreenshotEditorService extends Service implements View.OnClickList
     }
 
     public void loadScreenshot() {
-
         Log.d(TAG, "loadScreenshot: exists");
         Bitmap bitmap = FileUtil.getBitmap();
-        mImgScreenshot.setImageBitmap(bitmap);
+        mDrawingView.setImageBitmap(bitmap);
         saveScreenshot();
     }
 
@@ -287,25 +299,21 @@ public class ScreenshotEditorService extends Service implements View.OnClickList
         Log.d(TAG, "saveScreenshot to storage");
         mScreenshotPath = FileUtil.getScreenshotDirAndName();
 
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    // Save
-                    OutputStream out = new FileOutputStream(mScreenshotPath);
-                    mImgScreenshot.getImageBitmap().compress(PNG, 100, out);
-                    out.flush();
-                    out.close();
-                    sendBroadcast(new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE,
-                            Uri.fromFile(new File(mScreenshotPath))));
-                    Log.d(TAG, "saveScreenshotFile: success");
-                } catch (Throwable e) {
-                    // Several error may come out with file handling or OOM'
-                    Log.e(TAG, "saveScreenshotFile: failed");
-                    e.printStackTrace();
-                }
-            }
-        }).start();
+        FileUtil.saveScreenshot(mDrawingView.getImageBitmap(), mScreenshotPath);
+
+        sendBroadcast(new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE,
+                Uri.fromFile(new File(mScreenshotPath))));
+    }
+
+    public void deleteScreenshot() {
+        Log.d(TAG, "deleteScreenshot: ");
+
+        boolean deleted = FileUtil.deleteScreenshot(mScreenshotPath);
+
+        if (deleted) {
+            sendBroadcast(new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE,
+                    Uri.fromFile(new File(mScreenshotPath))));
+        }
     }
 
     public void shareScreenshot() {
@@ -319,27 +327,6 @@ public class ScreenshotEditorService extends Service implements View.OnClickList
         sharingIntent.setType("image/png");
         sharingIntent.putExtra(Intent.EXTRA_STREAM, imageUri);
         startActivity(Intent.createChooser(sharingIntent, getResources().getText(R.string.share)));
-    }
-
-    public void deleteScreenshot() {
-        Log.d(TAG, "deleteScreenshot: ");
-        boolean deleted = new File(mScreenshotPath).delete();
-        if (deleted) {
-            sendBroadcast(new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE,
-                    Uri.fromFile(new File(mScreenshotPath))));
-        }
-    }
-
-    @Override
-    public void onConfigurationChanged(Configuration newConfig) {
-        super.onConfigurationChanged(newConfig);
-
-        mainHandler.post(new Runnable() {
-            public void run() {
-                if (isShowing)
-                    wm.updateViewLayout(mainLayout, getParams());
-            }
-        });
     }
 
     private WindowManager.LayoutParams getParams() {

@@ -13,8 +13,8 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 
-public class ScreenshotActivity extends AppCompatActivity {
-    private static final String TAG = "ScreenshotActivity";
+public class InstructionActivity extends AppCompatActivity {
+    private static final String TAG = "InstructionActivity";
 
     public static final int REQUEST_DRAW_OVER = 1;
 

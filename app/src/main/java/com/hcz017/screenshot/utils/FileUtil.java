@@ -1,4 +1,4 @@
-package com.hcz017.screenshot;
+package com.hcz017.screenshot.utils;
 
 import android.content.Context;
 import android.graphics.Bitmap;
@@ -10,6 +10,8 @@ import java.io.FileOutputStream;
 import java.io.OutputStream;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+
+import static android.graphics.Bitmap.CompressFormat.PNG;
 
 public class FileUtil {
     private static final String TAG = "FileUtil";
@@ -41,7 +43,7 @@ public class FileUtil {
     /**
      * file name would be like "Screenshot_20170417_222222.png"
      */
-    static void generateScreenshotName(Context context) {
+    public static void generateScreenshotName(Context context) {
         long currentTime = System.currentTimeMillis();
         String imageDate = new SimpleDateFormat("yyyyMMdd-HHmmss").format(new Date(currentTime));
         String screenshotName = String.format(SCREENSHOT_FILE_NAME_TEMPLATE, imageDate);
@@ -52,7 +54,7 @@ public class FileUtil {
         Log.d(TAG, "generateScreenshotName: file name: " + screenshotDir.toString());
     }
 
-    public static void setScreenshotDirAndName(String dirAndName) {
+    private static void setScreenshotDirAndName(String dirAndName) {
         mScreenshotDirAndName = dirAndName;
     }
 
@@ -61,31 +63,61 @@ public class FileUtil {
     }
 
     /**
-     * save screenshot to sdcard
-     *
-     * @param bitmap the image source to be save
+     * save screenshot bitmap temporarily
      */
-    public static void saveScreenshotFile(Bitmap bitmap) {
-        try {
-            // Save
-            OutputStream out = new FileOutputStream(mScreenshotDirAndName);
-            bitmap.compress(Bitmap.CompressFormat.PNG, 100, out);
-            out.flush();
-            out.close();
-            Log.d(TAG, "saveScreenshotFile: success");
-        } catch (Throwable e) {
-            // Several error may come out with file handling or OOM'
-            Log.e(TAG, "saveScreenshotFile: failed");
-            e.printStackTrace();
-        }
-    }
-
-    // save screenshot bitmap temporarily
     public static void setBitmap(Bitmap bitmap) {
         mBitmap = bitmap;
     }
 
     public static Bitmap getBitmap() {
         return mBitmap;
+    }
+
+
+    /**
+     * save screenshot to sdcard/Pictures/Screenshots/
+     * @param bitmap bitmap to be save
+     * @param screenshotPath saved path and name
+     */
+    public static void saveScreenshot(final Bitmap bitmap, final String screenshotPath) {
+        Log.d(TAG, "saveScreenshot to storage");
+
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    // Save
+                    OutputStream out = new FileOutputStream(screenshotPath);
+                    bitmap.compress(PNG, 100, out);
+                    out.flush();
+                    out.close();
+                    Log.d(TAG, "saveScreenshotFile: success");
+                } catch (Throwable e) {
+                    // Several error may come out with file handling or OOM'
+                    Log.e(TAG, "saveScreenshotFile: failed");
+                    e.printStackTrace();
+                }
+            }
+        }).start();
+    }
+
+    /**
+     * delete screenshot file
+     * @param filePath the file to be deleted
+     * @return if successfully deleted
+     */
+    public static boolean deleteScreenshot(String filePath) {
+        File file = new File(filePath);
+        return isFileExists(file) && file.delete();
+    }
+
+    /**
+     * Return whether the file exists.
+     *
+     * @param file The file.
+     * @return {@code true}: yes<br>{@code false}: no
+     */
+    public static boolean isFileExists(final File file) {
+        return file != null && file.exists();
     }
 }

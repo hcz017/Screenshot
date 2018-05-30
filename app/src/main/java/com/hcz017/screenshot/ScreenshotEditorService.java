@@ -64,6 +64,7 @@ public class ScreenshotEditorService extends Service implements View.OnClickList
                 if (event.getKeyCode() == KeyEvent.KEYCODE_BACK
                         || event.getKeyCode() == KeyEvent.KEYCODE_HOME) {
                     ScreenshotEditorService.this.removeView();
+                    deleteScreenshot();
                 }
                 return super.dispatchKeyEvent(event);
             }
@@ -132,6 +133,7 @@ public class ScreenshotEditorService extends Service implements View.OnClickList
         }
         isShowing = false;
         stopSelf();
+        onDestroy();
     }
 
     private void initViews() {
@@ -195,7 +197,6 @@ public class ScreenshotEditorService extends Service implements View.OnClickList
                     saveScreenshot();
                 }
                 removeView();
-                onDestroy();
                 break;
             case R.id.paint:
                 changeToPaintMode();
@@ -307,6 +308,10 @@ public class ScreenshotEditorService extends Service implements View.OnClickList
 
     public void deleteScreenshot() {
         Log.d(TAG, "deleteScreenshot: ");
+
+        if (mScreenshotPath == null || mScreenshotPath.isEmpty()){
+            return;
+        }
 
         boolean deleted = FileUtil.deleteScreenshot(mScreenshotPath);
 

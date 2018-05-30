@@ -49,6 +49,7 @@ public class ScreenshotEditorService extends Service implements View.OnClickList
     private LinearLayout mLinearLayoutsure;
     private Button mButtonCrop;
     private boolean mCropMode;
+    private boolean mPaintMode;
 
     @Override
     public void onCreate() {
@@ -94,6 +95,8 @@ public class ScreenshotEditorService extends Service implements View.OnClickList
     public void onDestroy() {
         super.onDestroy();
         mainHandler = null;
+        mCropMode = false;
+        mPaintMode = false;
         System.gc();
     }
 
@@ -184,6 +187,9 @@ public class ScreenshotEditorService extends Service implements View.OnClickList
                     cropEnd();
                     saveScreenshot();
                 }
+                if (mPaintMode){
+                    saveScreenshot();
+                }
                 shareScreenshot();
                 removeView();
                 break;
@@ -194,6 +200,9 @@ public class ScreenshotEditorService extends Service implements View.OnClickList
             case R.id.btn_save:
                 if (mCropMode) {
                     cropEnd();
+                    saveScreenshot();
+                }
+                if (mPaintMode){
                     saveScreenshot();
                 }
                 removeView();
@@ -218,10 +227,8 @@ public class ScreenshotEditorService extends Service implements View.OnClickList
                 cropStart();
                 break;
             case R.id.button_sure:
-                if (mCropMode){
-                    cropEnd();
-                    saveScreenshot();
-                }
+                cropEnd();
+                saveScreenshot();
                 break;
             default:
                 break;
@@ -249,6 +256,7 @@ public class ScreenshotEditorService extends Service implements View.OnClickList
     }
 
     private void changeToPaintMode() {
+        mPaintMode = true;
         mainLayout.findViewById(R.id.bot_bar).setVisibility(View.GONE);
         mainLayout.findViewById(R.id.paint_bar).setVisibility(View.VISIBLE);
         mDrawingView.initializePen();

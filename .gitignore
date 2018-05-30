@@ -8,3 +8,4 @@
 .externalNativeBuild
 proguard-rules.pro
 gradle.properties
+app/build/

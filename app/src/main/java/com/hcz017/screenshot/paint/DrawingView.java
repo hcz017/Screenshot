@@ -33,6 +33,8 @@ public class DrawingView extends View {
     private LinkedList<DrawPath> savePath;
     private DrawPath mLastDrawPath;
     private Matrix matrix;
+    private float mPaintBarPenSize;
+    private int mPaintBarPenColor;
 
     public DrawingView(Context c) {
         this(c, null);
@@ -109,7 +111,7 @@ public class DrawingView extends View {
         }
         float x;
         float y;
-        if (mProportion != 0 ) {
+        if (mProportion != 0) {
             x = (event.getX()) / mProportion;
             y = event.getY() / mProportion;
         } else {
@@ -118,9 +120,10 @@ public class DrawingView extends View {
         }
         switch (event.getAction()) {
             case MotionEvent.ACTION_DOWN:
-                if (savePath.size() == 0 && mLastDrawPath != null) {
-                    mPaint.setColor(mLastDrawPath.getPaintColor());
-                    mPaint.setStrokeWidth(mLastDrawPath.getPaintWidth());
+                // This happens when we undo a path
+                if (mLastDrawPath != null) {
+                    mPaint.setColor(mPaintBarPenColor);
+                    mPaint.setStrokeWidth(mPaintBarPenSize);
                 }
                 mPath = new Path();
                 mPath.reset();
@@ -189,7 +192,11 @@ public class DrawingView extends View {
         return mEraserSize;
     }
 
+    /**
+     * This method should ONLY be called by clicking paint toolbar(outer class)
+     */
     public void setPenSize(float size) {
+        mPaintBarPenSize = size;
         mPaint.setStrokeWidth(size);
     }
 
@@ -197,7 +204,11 @@ public class DrawingView extends View {
         return mPaint.getStrokeWidth();
     }
 
+    /**
+     * This method should ONLY be called by clicking paint toolbar(outer class)
+     */
     public void setPenColor(@ColorInt int color) {
+        mPaintBarPenColor = color;
         mPaint.setColor(color);
     }
 
@@ -250,7 +261,6 @@ public class DrawingView extends View {
             this.path = path;
             this.paintColor = paintColor;
             this.paintWidth = paintWidth;
-
         }
 
         int getPaintColor() {
